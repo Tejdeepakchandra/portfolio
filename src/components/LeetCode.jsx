@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button"
 import { useEffect, useState, useMemo } from "react"
 
 const LEETCODE_USERNAME = "IIFXj53axV"
-const BACKEND_API = "http://localhost:3005/api/leetcode"
+// In development: use local backend server at port 3005
+// In production: use Vercel API route /api/leetcode
+const BACKEND_API = import.meta.env.DEV ? "http://localhost:3005/api/leetcode" : "/api/leetcode"
 
 const FALLBACK_PROFILE = {
   totalSolved: 300,
@@ -95,7 +97,7 @@ const LeetCode = () => {
       try {
         console.log("🔄 Fetching LeetCode data for:", LEETCODE_USERNAME)
         
-        // Call our local Node.js backend server
+        // Call our backend (local in dev or Vercel API route in production)
         const endpoint = `${BACKEND_API}/${LEETCODE_USERNAME}`
         console.log("📡 Querying backend:", endpoint)
         
