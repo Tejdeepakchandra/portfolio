@@ -25,9 +25,14 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { username } = req.query;
+    // Extract username from URL path: /api/leetcode/username
+    const pathParts = req.url.split('/');
+    const username = pathParts[pathParts.length - 1];
 
-    if (!username) {
+    console.log(`📡 API Route called with URL: ${req.url}`);
+    console.log(`👤 Extracted username: ${username}`);
+
+    if (!username || username === 'leetcode') {
       return res.status(400).json({ error: 'Username required' });
     }
 
