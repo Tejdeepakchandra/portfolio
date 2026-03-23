@@ -25,14 +25,13 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Extract username from URL path: /api/leetcode/username
-    const pathParts = req.url.split('/');
-    const username = pathParts[pathParts.length - 1];
+    // Get username from dynamic route parameter
+    const { username } = req.query;
 
-    console.log(`📡 API Route called with URL: ${req.url}`);
-    console.log(`👤 Extracted username: ${username}`);
+    console.log(`📡 API Route called`);
+    console.log(`👤 Username: ${username}`);
 
-    if (!username || username === 'leetcode') {
+    if (!username) {
       return res.status(400).json({ error: 'Username required' });
     }
 
@@ -40,7 +39,7 @@ export default async function handler(req, res) {
     const now = Date.now();
     if (cache.data && now - cache.timestamp < CACHE_DURATION) {
       console.log(`📦 Returning cached data for ${username}`);
-      return res.json(cache.data);
+      return res.status(200).json(cache.data);
     }
 
     console.log(`🔄 Fetching fresh LeetCode data for ${username}...`);
@@ -52,7 +51,6 @@ export default async function handler(req, res) {
     ];
 
     let response = null;
-    let calendarResponse = null;
     let lastError = null;
 
     for (const endpoint of apiEndpoints) {
@@ -69,7 +67,6 @@ export default async function handler(req, res) {
         if (response.ok) {
           const data = await response.json();
           console.log(`✅ Success from: ${endpoint}`);
-          console.log(`📝 Response keys:`, Object.keys(data));
 
           // Try to fetch calendar data separately
           if (endpoint.includes('alfa-leetcode-api')) {
@@ -86,7 +83,7 @@ export default async function handler(req, res) {
 
               if (calendarResponse.ok) {
                 const calendarData = await calendarResponse.json();
-                console.log(`✅ Calendar data received:`, Object.keys(calendarData).length, 'entries');
+                console.log(`✅ Calendar data received`);
                 data.submissionCalendar = calendarData;
               }
             } catch (err) {
