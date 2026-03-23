@@ -1,4 +1,5 @@
-import fetch from 'node-fetch';
+// Use native fetch available in Node.js 18+
+// No need to import node-fetch
 
 // Cache for LeetCode data (max 1 hour)
 const cache = {
@@ -28,9 +29,6 @@ export default async function handler(req, res) {
     // Get username from dynamic route parameter
     const { username } = req.query;
 
-    console.log(`📡 API Route called`);
-    console.log(`👤 Username: ${username}`);
-
     if (!username) {
       return res.status(400).json({ error: 'Username required' });
     }
@@ -38,56 +36,45 @@ export default async function handler(req, res) {
     // Check cache
     const now = Date.now();
     if (cache.data && now - cache.timestamp < CACHE_DURATION) {
-      console.log(`📦 Returning cached data for ${username}`);
       return res.status(200).json(cache.data);
     }
 
-    console.log(`🔄 Fetching fresh LeetCode data for ${username}...`);
-
     // Try multiple API endpoints
     const apiEndpoints = [
-      `https://alfa-leetcode-api.onrender.com/${username}/solved`,
       `https://leetcode-api.ziqing.cc/api/${username}`,
+      `https://alfa-leetcode-api.onrender.com/${username}/solved`,
     ];
 
-    let response = null;
     let lastError = null;
 
     for (const endpoint of apiEndpoints) {
       try {
-        console.log(`📡 Trying: ${endpoint}`);
-        response = await fetch(endpoint, {
+        const response = await fetch(endpoint, {
           method: 'GET',
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
           },
-          timeout: 10000,
         });
 
         if (response.ok) {
           const data = await response.json();
-          console.log(`✅ Success from: ${endpoint}`);
 
-          // Try to fetch calendar data separately
+          // Try to fetch calendar data separately if using alfa API
           if (endpoint.includes('alfa-leetcode-api')) {
             try {
               const calendarUrl = endpoint.replace('/solved', '/calendar');
-              console.log(`📡 Fetching calendar from: ${calendarUrl}`);
               const calendarResponse = await fetch(calendarUrl, {
-                method: 'GET',
                 headers: {
                   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
                 },
-                timeout: 10000,
               });
 
               if (calendarResponse.ok) {
                 const calendarData = await calendarResponse.json();
-                console.log(`✅ Calendar data received`);
                 data.submissionCalendar = calendarData;
               }
             } catch (err) {
-              console.warn('⚠️ Calendar fetch failed, continuing without it');
+              // Continue without calendar data
             }
           }
 
@@ -99,20 +86,17 @@ export default async function handler(req, res) {
         }
       } catch (err) {
         lastError = err;
-        console.warn(`⚠️ Endpoint failed: ${err.message}`);
         continue;
       }
     }
 
-    // If all endpoints failed, return error
-    console.error('❌ All endpoints failed');
+    // If all endpoints failed
     return res.status(500).json({
       status: 'error',
       message: 'Failed to fetch LeetCode data',
       error: lastError?.message,
     });
   } catch (err) {
-    console.error('❌ API Error:', err);
     return res.status(500).json({
       status: 'error',
       message: 'Internal server error',
