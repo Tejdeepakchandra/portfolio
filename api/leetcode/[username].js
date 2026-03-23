@@ -2,12 +2,12 @@
 const FALLBACK_DATA = {
   username: 'IIFXj53axV',
   totalSolved: 300,
-  easySolved: 120,
-  mediumSolved: 140,
-  hardSolved: 40,
-  easyTotal: 830,
-  mediumTotal: 1750,
-  hardTotal: 760,
+  easySolved: 75,
+  mediumSolved: 89,
+  hardSolved: 9,
+  easyTotal: 993,
+  mediumTotal: 2029,
+  hardTotal: 916,
   ranking: 150000,
   contestRating: 1500,
   contestGlobalRanking: 80000,
@@ -46,6 +46,22 @@ const getUserContestQuery = (username) => `
       attendedContestsCount
       rating
       globalRanking
+    }
+  }
+`;
+
+const getProblemCountsQuery = () => `
+  query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $filters: QuestionListFilterInput) {
+    problemsetQuestionList: questionList(
+      categorySlug: $categorySlug
+      limit: $limit
+      skip: $skip
+      filters: $filters
+    ) {
+      total: totalNum
+      questions: data {
+        difficulty
+      }
     }
   }
 `;
@@ -127,9 +143,9 @@ export default async function handler(req, res) {
           const mediumStats = acSubmissions.find(s => s.difficulty === 'Medium') || { count: 0 };
           const hardStats = acSubmissions.find(s => s.difficulty === 'Hard') || { count: 0 };
 
-          const easyTotal = totalSubmissions.find(s => s.difficulty === 'Easy')?.count || 0;
-          const mediumTotal = totalSubmissions.find(s => s.difficulty === 'Medium')?.count || 0;
-          const hardTotal = totalSubmissions.find(s => s.difficulty === 'Hard')?.count || 0;
+          const easyTotal = totalSubmissions.find(s => s.difficulty === 'Easy')?.count || 993;
+          const mediumTotal = totalSubmissions.find(s => s.difficulty === 'Medium')?.count || 2029;
+          const hardTotal = totalSubmissions.find(s => s.difficulty === 'Hard')?.count || 916;
 
           const data = {
             username: user.username,
@@ -146,7 +162,7 @@ export default async function handler(req, res) {
             contestAttend: contestData?.attendedContestsCount || 0,
           };
 
-          console.log(`✅ Got real data from GraphQL`);
+          console.log(`✅ Got real data from GraphQL: ${easyStats.count}/${easyTotal} easy`);
           return res.status(200).json({
             status: 'success',
             data,
@@ -157,10 +173,9 @@ export default async function handler(req, res) {
       console.warn(`⚠️ GraphQL API failed: ${err.message}`);
     }
 
-    // Try alternative APIs
+    // Try alternative APIs as fallback
     const alternativeUrls = [
       `https://leetcode-api.io/user/${username}`,
-      `https://leetcode-api.ziqing.cc/api/${username}`,
       `https://alfa-leetcode-api.onrender.com/${username}/solved`,
     ];
 
@@ -174,11 +189,28 @@ export default async function handler(req, res) {
         });
 
         if (response.ok) {
-          const data = await response.json();
+          const apiData = await response.json();
           console.log(`✅ Got data from: ${url}`);
+          
+          // Normalize the response to match our schema
+          const normalizedData = {
+            username: apiData.username || username,
+            totalSolved: apiData.totalSolved || apiData.solvedProblems || 0,
+            easySolved: apiData.easySolved || 0,
+            mediumSolved: apiData.mediumSolved || 0,
+            hardSolved: apiData.hardSolved || 0,
+            easyTotal: apiData.easyTotal || 993,
+            mediumTotal: apiData.mediumTotal || 2029,
+            hardTotal: apiData.hardTotal || 916,
+            ranking: apiData.ranking || 0,
+            contestRating: apiData.contestRating || 0,
+            contestGlobalRanking: apiData.contestGlobalRanking || 0,
+            contestAttend: apiData.contestAttend || 0,
+          };
+          
           return res.status(200).json({
             status: 'success',
-            data: data,
+            data: normalizedData,
           });
         }
       } catch (err) {
