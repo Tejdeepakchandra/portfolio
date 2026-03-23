@@ -23,8 +23,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'framer-motion'],
-          icons: ['react-icons'],
-          three: ['three', '@react-three/fiber', '@react-three/drei']
+          icons: ['react-icons']
         }
       }
     }
