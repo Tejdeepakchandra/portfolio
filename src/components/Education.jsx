@@ -1,5 +1,6 @@
 import { motion } from "framer-motion"
-import { GraduationCap, MapPin, Calendar, Award } from "lucide-react"
+import { GraduationCap, MapPin, Calendar, Award, Eye, X } from "lucide-react"
+import { useState } from "react"
 
 const education = [
   {
@@ -29,13 +30,43 @@ const education = [
 ]
 
 const certificates = [
-  { name: "Cloud Computing", org: "NPTEL", date: "Oct 2025", icon: "☁️" },
-  { name: "Build Generative AI Apps", org: "Infosys", date: "Aug 2025", icon: "🤖" },
-  { name: "Git & GitHub", org: "Cipher Schools", date: "Jul 2025", icon: "🔧" },
-  { name: "Data Structures & Algorithms", org: "CSE Pathshala", date: "Mar 2024", icon: "📊" },
+  { 
+    name: "Cloud Computing", 
+    org: "NPTEL", 
+    date: "Oct 2025", 
+    icon: "☁️",
+    link: "https://drive.google.com/file/d/1CXpOJzuBXl71B3eNh06DWVgu9whClED-/view?usp=sharing",
+    embedId: "1CXpOJzuBXl71B3eNh06DWVgu9whClED-"
+  },
+  { 
+    name: "Build Generative AI Apps", 
+    org: "Infosys", 
+    date: "Aug 2025", 
+    icon: "🤖",
+    link: "https://drive.google.com/file/d/1_zu4t-KTPJ-vdtwU7m5-Pg5bQfYKaIAI/view?usp=drive_link",
+    embedId: "1_zu4t-KTPJ-vdtwU7m5-Pg5bQfYKaIAI"
+  },
+  { 
+    name: "Version Control: Git & GitHub", 
+    org: "Cipher Schools", 
+    date: "Jul 2025", 
+    icon: "🔧",
+    link: "https://drive.google.com/file/d/1nNaUk4vaO6jS8uqZWLgmEij7PZo_yBjg/view?usp=drive_link",
+    embedId: "1nNaUk4vaO6jS8uqZWLgmEij7PZo_yBjg"
+  },
+  { 
+    name: "Data Structures & Algorithms", 
+    org: "CSE Pathshala", 
+    date: "Mar 2024", 
+    icon: "📊",
+    link: "https://drive.google.com/file/d/123pbJt5w2oJaEu89qc3pcw0j07gqzSlq/view?usp=drive_link",
+    embedId: "123pbJt5w2oJaEu89qc3pcw0j07gqzSlq"
+  },
 ]
 
 const Education = () => {
+  const [selectedCert, setSelectedCert] = useState(null)
+
   return (
     <section id="education" className="py-28 relative overflow-hidden">
       <div className="absolute inset-0 gradient-mesh" />
@@ -121,13 +152,81 @@ const Education = () => {
                     <p className="text-sm font-display font-semibold text-foreground">{cert.name}</p>
                     <p className="text-xs text-muted-foreground">{cert.org}</p>
                   </div>
-                  <span className="text-xs font-mono text-muted-foreground shrink-0">{cert.date}</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs font-mono text-muted-foreground">{cert.date}</span>
+                    <motion.button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setSelectedCert(cert)
+                      }}
+                      className="p-2 hover:bg-primary/10 rounded-lg transition-colors text-muted-foreground hover:text-primary cursor-pointer z-10"
+                      title="View certificate"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Eye size={16} />
+                    </motion.button>
+                  </div>
                 </motion.div>
               ))}
             </div>
           </motion.div>
         </div>
       </div>
+
+      {/* Certificate Modal */}
+      {selectedCert && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setSelectedCert(null)}
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-card border border-border/50 rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+          >
+            <div className="sticky top-0 bg-card border-b border-border/30 p-6 flex items-start justify-between">
+              <div>
+                <h2 className="text-2xl font-display font-semibold text-foreground">{selectedCert.name}</h2>
+                <p className="text-sm text-muted-foreground mt-1">Issued by {selectedCert.org} • {selectedCert.date}</p>
+              </div>
+              <button
+                onClick={() => setSelectedCert(null)}
+                className="p-2 hover:bg-primary/10 rounded-lg transition-colors text-muted-foreground hover:text-primary"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="w-full rounded-lg overflow-hidden border border-border/50 bg-background">
+                <iframe
+                  src={`https://drive.google.com/file/d/${selectedCert.embedId}/preview`}
+                  className="w-full h-[600px] border-0"
+                  allow="autoplay"
+                  title={selectedCert.name}
+                />
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <a
+                  href={selectedCert.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
+                >
+                  Open in Google Drive
+                </a>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </section>
   )
 }

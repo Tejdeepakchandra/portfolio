@@ -6,6 +6,7 @@ import FeaturedProject from "@/components/FeaturedProject"
 import Projects from "@/components/Projects"
 import LeetCode from "@/components/LeetCode"
 import GitHubActivity from "@/components/GitHubActivity"
+import Training from "@/components/Training"
 import Education from "@/components/Education"
 import Contact from "@/components/Contact"
 import Footer from "@/components/Footer"
@@ -21,6 +22,7 @@ const Index = () => {
       <Projects />
       <LeetCode />
       <GitHubActivity />
+      <Training />
       <Education />
       <Contact />
       <Footer />

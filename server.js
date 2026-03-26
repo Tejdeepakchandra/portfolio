@@ -1,12 +1,24 @@
 import express from 'express'
 import cors from 'cors'
 import fetch from 'node-fetch'
+import nodemailer from 'nodemailer'
 
 const app = express()
 const PORT = 3005
 
 app.use(cors())
 app.use(express.json())
+
+// Configure email transporter (using Gmail)
+// Note: You need to use an App Password, not your regular Gmail password
+// Create one here: https://myaccount.google.com/apppasswords
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER || 'tejdeepak2005@gmail.com',
+    pass: process.env.EMAIL_PASSWORD || 'tvio ehnc axrt jdzq' // App password (16 chars)
+  }
+})
 
 // Cache for LeetCode data (max 1 hour)
 const cache = {
@@ -139,6 +151,86 @@ app.get('/api/leetcode/:username', async (req, res) => {
   }
 })
 
+// Email sending endpoint
+app.post('/api/send-email', async (req, res) => {
+  const { name, email, message } = req.body
+
+  // Validate input
+  if (!name || !email || !message) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'All fields are required' 
+    })
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Please enter a valid email address' 
+    })
+  }
+
+  try {
+    // Log the submission
+    console.log('\n📧 New Contact Form Submission:')
+    console.log('From:', name, `(${email})`)
+    console.log('Message:', message)
+    console.log('Time:', new Date().toISOString())
+    console.log('---\n')
+
+    // Send email to portfolio owner
+    const mailOptions = {
+      from: process.env.EMAIL_USER || 'tejdeepak2005@gmail.com',
+      to: 'tejdeepak2005@gmail.com',
+      replyTo: email,
+      subject: `New message from ${name}`,
+      html: `
+        <h3>New Contact Form Submission</h3>
+        <p><strong>From:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Message:</strong></p>
+        <p>${message.replace(/\n/g, '<br>')}</p>
+        <hr>
+        <p style="color: #888; font-size: 12px;">This message was sent from your portfolio website.</p>
+      `
+    }
+
+    await transporter.sendMail(mailOptions)
+
+    // Send confirmation email to visitor
+    const confirmationMailOptions = {
+      from: process.env.EMAIL_USER || 'tejdeepak2005@gmail.com',
+      to: email,
+      subject: 'Message received - Tej Deepak',
+      html: `
+        <h3>Thank you for reaching out!</h3>
+        <p>Hi ${name},</p>
+        <p>I've received your message and will get back to you as soon as possible.</p>
+        <p><strong>Your message:</strong></p>
+        <p>${message.replace(/\n/g, '<br>')}</p>
+        <hr>
+        <p>Best regards,<br>Tej Deepak</p>
+      `
+    }
+
+    await transporter.sendMail(confirmationMailOptions)
+
+    console.log('✅ Emails sent successfully!')
+    res.json({ 
+      success: true, 
+      message: 'Message sent successfully! I\'ll get back to you soon.' 
+    })
+  } catch (error) {
+    console.error('❌ Error sending email:', error.message)
+    res.status(500).json({
+      success: false,
+      message: 'Error sending email. Please try again later.'
+    })
+  }
+})
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
@@ -147,4 +239,5 @@ app.get('/health', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 LeetCode Backend Server running on http://localhost:${PORT}`)
   console.log(`📍 API endpoint: http://localhost:${PORT}/api/leetcode/:username`)
+  console.log(`📧 Email endpoint: http://localhost:${PORT}/api/send-email`)
 })

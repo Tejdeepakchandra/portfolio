@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Menu, X, Download } from "lucide-react"
+import { Menu, X, Download, Eye } from "lucide-react"
 
 const navItems = [
   { label: "About", href: "#about" },
@@ -8,6 +8,7 @@ const navItems = [
   { label: "Projects", href: "#projects" },
   { label: "DSA", href: "#leetcode" },
   { label: "GitHub", href: "#github" },
+  { label: "Training", href: "#training" },
   { label: "Education", href: "#education" },
   { label: "Contact", href: "#contact" },
 ]
@@ -16,6 +17,7 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [activeSection, setActiveSection] = useState("")
+  const [showResumeModal, setShowResumeModal] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -72,14 +74,23 @@ const Navbar = () => {
                 )}
               </a>
             ))}
-            <a
-              href="/FullStack_CV_Tej.pdf"
-              download
-              className="ml-3 px-4 py-2 text-sm font-medium bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-all duration-300 flex items-center gap-2 hover:gap-3"
-            >
-              <Download size={14} />
-              Resume
-            </a>
+            <div className="ml-3 flex items-center gap-1.5">
+              <button
+                onClick={() => setShowResumeModal(true)}
+                className="px-3 py-2 text-sm font-medium bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-all duration-300 flex items-center gap-2"
+                title="View resume"
+              >
+                <Eye size={14} />
+              </button>
+              <a
+                href="/FullStack_CV_Tej.pdf"
+                download
+                className="px-4 py-2 text-sm font-medium bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-all duration-300 flex items-center gap-2 hover:gap-3"
+              >
+                <Download size={14} />
+                Resume
+              </a>
+            </div>
           </div>
 
           <button
@@ -113,18 +124,84 @@ const Navbar = () => {
                   {item.label}
                 </motion.a>
               ))}
-              <a
-                href="/FullStack_CV_Tej.pdf"
-                download
-                className="mt-4 px-6 py-3 bg-primary/10 text-primary rounded-xl font-medium flex items-center gap-2"
-              >
-                <Download size={16} />
-                Resume
-              </a>
+              <div className="mt-4 flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowResumeModal(true)
+                    setMobileOpen(false)
+                  }}
+                  className="px-4 py-3 bg-primary/10 text-primary rounded-xl font-medium flex items-center gap-2"
+                >
+                  <Eye size={16} />
+                  View
+                </button>
+                <a
+                  href="/FullStack_CV_Tej.pdf"
+                  download
+                  className="px-6 py-3 bg-primary/10 text-primary rounded-xl font-medium flex items-center gap-2"
+                >
+                  <Download size={16} />
+                  Download
+                </a>
+              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Resume Modal */}
+      {showResumeModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setShowResumeModal(false)}
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-card border border-border/50 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+          >
+            <div className="sticky top-0 bg-card border-b border-border/30 p-6 flex items-start justify-between">
+              <div>
+                <h2 className="text-2xl font-display font-semibold text-foreground">My Resume</h2>
+                <p className="text-sm text-muted-foreground mt-1">Full Stack Developer - MERN Stack Specialist</p>
+              </div>
+              <button
+                onClick={() => setShowResumeModal(false)}
+                className="p-2 hover:bg-primary/10 rounded-lg transition-colors text-muted-foreground hover:text-primary"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="w-full rounded-lg overflow-hidden border border-border/50 bg-background">
+                <embed
+                  src="/FullStack_CV_Tej.pdf"
+                  type="application/pdf"
+                  className="w-full h-[600px]"
+                  title="Resume PDF"
+                />
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <a
+                  href="/FullStack_CV_Tej.pdf"
+                  download
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium flex items-center gap-2"
+                >
+                  <Download size={16} />
+                  Download
+                </a>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </>
   )
 }
